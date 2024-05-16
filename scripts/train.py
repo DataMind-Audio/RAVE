@@ -53,6 +53,9 @@ flags.DEFINE_integer('batch', 8, help='Batch size')
 flags.DEFINE_string('ckpt',
                     None,
                     help='Path to previous checkpoint of the run')
+flags.DEFINE_string('transfer_ckpt',
+                    None
+                    help='[DM fork] Path to checkpoint to initialise weights from')
 flags.DEFINE_multi_string('override', default=[], help='Override gin binding')
 flags.DEFINE_integer('workers',
                      default=8,
@@ -261,7 +264,14 @@ def main(argv):
         # model = model.load_state_dict(loaded)
         trainer.fit_loop.epoch_loop._batches_that_stepped = loaded['global_step']
         # model = model.load_state_dict(loaded['state_dict'])
-    
+
+    transfer_run = rave.core.search_for_run(FLAGS.transfer_ckpt)
+    if transfer_run is not None:
+        print(f'Initialising weights from: {transfer_run}')
+        transfer_model = torch.load(transfer_run, map_location='cpu')
+        state_dict = transfer_model['state_dict']
+        model.load_state_dict(state_dict, strict=False)
+
     with open(os.path.join(FLAGS.out_path, RUN_NAME, "config.gin"), "w") as config_out:
         config_out.write(gin.operative_config_str())
 
