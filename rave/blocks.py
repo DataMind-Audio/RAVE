@@ -11,6 +11,7 @@ from torchaudio.transforms import Spectrogram
 
 from .core import amp_to_impulse_response, fft_convolve, mod_sigmoid
 
+import math
 
 @gin.configurable
 def normalization(module: nn.Module, mode: str = 'identity'):
@@ -532,6 +533,9 @@ class EncoderV2(nn.Module):
         super().__init__()
         dilations_list = normalize_dilations(dilations, ratios)
         data_size = data_size or n_channels
+
+        # NOTE(robin): Used for computing the block size later
+        self.downsample_factor = math.prod(ratios)
 
         net = [
             normalization(

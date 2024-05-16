@@ -223,6 +223,16 @@ class RAVE(pl.LightningModule):
         self.register_buffer("receptive_field", torch.tensor([0, 0]).long())
         self.audio_monitor_epochs = audio_monitor_epochs
 
+    # NOTE(robin): From Victor Shepardson's RAVE fork. Allows us to compute the
+    # block size of a particular model
+    @property
+    def block_size(self):
+        bs = self.encoder.encoder.downsample_factor
+        if self.pqmf is not None:
+            bs = bs * self.pqmt.n_band
+
+        return bs
+
     def configure_optimizers(self):
         gen_p = list(self.encoder.parameters())
         gen_p += list(self.decoder.parameters())
