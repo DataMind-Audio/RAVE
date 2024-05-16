@@ -20,6 +20,19 @@ from . import transforms
 from udls import AudioExample as AudioExampleWrapper
 from udls.generated import AudioExample
 
+import resampy
+
+class RandomSpeed(transforms.Transform):
+    def __init__(self, semitones):
+        self.semitones = semitones
+
+    def __call__(self, x: np.ndarray):
+        r = random() * 2.0 - 1.0 # NOTE(robin): map [0, 1] -> [-1, +1]
+        rate = 2 ** (r * self.semitones / 12.0)
+        x = resampy.resample(x, rate, 1, filter='kaiser_fast')
+
+        return x
+
 
 def get_derivator_integrator(sr: int):
     alpha = 1 / (1 + 1 / sr * 2 * np.pi * 10)
@@ -209,6 +222,7 @@ def get_dataset(db_path,
                 n_signal,
                 derivative: bool = False,
                 normalize: bool = False,
+                speed_semitones: float = 0,
                 rand_pitch: bool = False,
                 augmentations: Union[None, Iterable[Callable]] = None, 
                 n_channels: int = 1):
@@ -220,7 +234,13 @@ def get_dataset(db_path,
     sr_dataset = metadata.get('sr', 44100)
     lazy = metadata['lazy']
 
-    transform_list = [
+    transform_list = [lambda x: x.astype(np.float32)]
+
+    # NOTE(robin): [DM Fork]
+    if speed_semitones:
+        transform_list.append(RandomSpeed(speed_semitones))
+
+    transform_list.extend([
         lambda x: x.astype(np.float32),
         transforms.RandomCrop(n_signal),
         transforms.RandomApply(
@@ -228,7 +248,7 @@ def get_dataset(db_path,
             p=.8,
         ),
         transforms.Dequantize(16),
-    ]
+    ])
 
     if rand_pitch:
         rand_pitch = list(map(float, rand_pitch))

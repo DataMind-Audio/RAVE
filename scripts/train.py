@@ -54,7 +54,7 @@ flags.DEFINE_string('ckpt',
                     None,
                     help='Path to previous checkpoint of the run')
 flags.DEFINE_string('transfer_ckpt',
-                    None
+                    None,
                     help='[DM fork] Path to checkpoint to initialise weights from')
 flags.DEFINE_multi_string('override', default=[], help='Override gin binding')
 flags.DEFINE_integer('workers',
@@ -70,6 +70,10 @@ flags.DEFINE_bool('normalize',
 flags.DEFINE_list('rand_pitch',
                   default=None,
                   help='activates random pitch')
+flags.DEFINE_float('speed_semitones',
+                  default=0,
+                  help='''[DM Fork] Augment training data by resampling the dataset.
+                  Randomly applies a temporal pitch shift in the range [-speed_semitones, speed_semitones].''')
 flags.DEFINE_float('ema',
                    default=None,
                    help='Exponential weight averaging factor (optional)')
@@ -169,6 +173,7 @@ def main(argv):
                                        FLAGS.n_signal,
                                        derivative=FLAGS.derivative,
                                        normalize=FLAGS.normalize,
+                                       speed_semitones=FLAGS.speed_semitones,
                                        rand_pitch=FLAGS.rand_pitch,
                                        n_channels=n_channels)
     train, val = rave.dataset.split_dataset(dataset, 98)
