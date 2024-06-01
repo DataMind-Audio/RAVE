@@ -21,6 +21,8 @@ import rave.core
 import rave.dataset
 from rave.transforms import get_augmentations, add_augmentation
 
+import glob
+
 
 FLAGS = flags.FLAGS
 
@@ -151,10 +153,14 @@ def main(argv):
     gin.bind_parameter('dataset.get_dataset.augmentations', augmentations)
 
     # parse configuration
+    config_file = None
     if FLAGS.ckpt:
-        config_file = rave.core.search_for_config(FLAGS.ckpt)
-        if config_file is None:
-            print('Config file not found in %s'%FLAGS.run)
+        files = glob.glob(os.path.join(FLAGS.ckpt, '*'))
+
+        if len(files) > 0:
+            config_file = rave.core.search_for_config(files[0])
+
+    if config_file is not None:
         gin.parse_config_file(config_file)
     else:
         gin.parse_config_files_and_bindings(
