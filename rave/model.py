@@ -154,6 +154,7 @@ class RAVE(pl.LightningModule):
         pqmf: Optional[Callable[[], nn.Module]] = None,
         spectrogram: Optional[Callable] = None,
         update_discriminator_every: int = 2,
+        freeze_encoder: bool = True,
         n_channels: int = 1,
         input_mode: str = "pqmf",
         output_mode: str = "pqmf",
@@ -220,6 +221,7 @@ class RAVE(pl.LightningModule):
         self.beta_factor = 1.
         self.integrator = None
 
+        self.freeze_encoder = freeze_encoder
         self.register_buffer("receptive_field", torch.tensor([0, 0]).long())
         self.audio_monitor_epochs = audio_monitor_epochs
 
@@ -302,7 +304,7 @@ class RAVE(pl.LightningModule):
         x_raw.requires_grad = True
 
         batch_size = x_raw.shape[:-2]
-        self.encoder.set_warmed_up(self.warmed_up)
+        self.encoder.set_warmed_up(self.warmed_up and self.freeze_encoder)
         self.decoder.set_warmed_up(self.warmed_up)
 
         # ENCODE INPUT
