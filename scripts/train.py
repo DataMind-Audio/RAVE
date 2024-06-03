@@ -281,6 +281,13 @@ def main(argv):
         print(f'Initialising weights from: {transfer_run}')
         transfer_model = torch.load(transfer_run, map_location='cpu')
         state_dict = transfer_model['state_dict']
+
+        model_state = model.state_dict()
+        for state in list(state_dict):
+            if state not in model_state or state_dict[state].shape != model_state[state].shape:
+                print(f'Skippping {state}')
+                state_dict.pop(state)
+
         model.load_state_dict(state_dict, strict=False)
 
     with open(os.path.join(FLAGS.out_path, RUN_NAME, "config.gin"), "w") as config_out:
