@@ -47,7 +47,8 @@ class AudioDataset(data.Dataset):
     @property
     def env(self) -> lmdb.Environment:
         if self._env is None:
-            self._env = lmdb.open(self._db_path, lock=False)
+            max_db_size = 500 * 1024**3 # NOTE(robin): 500 GiB limit
+            self._env = lmdb.open(self._db_path, map_size=max_db_size, lock=False)
         return self._env
 
     @property
