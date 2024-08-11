@@ -37,7 +37,7 @@ flags.DEFINE_integer('sampling_rate',
                      44100,
                      help='Sampling rate to use during training')
 flags.DEFINE_integer('max_db_size',
-                     100,
+                     500,
                      help='Maximum size (in GB) of the dataset')
 flags.DEFINE_multi_string(
     'ext',
